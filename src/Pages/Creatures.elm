@@ -62,6 +62,7 @@ update msg model =
                             , criticalDamage = Nothing
                             , warbandScale = False
                             , notes = ""
+                            , incapacitated = False
                             }
 
                 newId =
@@ -134,6 +135,7 @@ type alias Creature =
     , criticalDamage : Maybe String
     , warbandScale : Bool
     , notes : String
+    , incapacitated : Bool
     }
 
 
@@ -158,9 +160,17 @@ current (Stat ( _, currentStat )) =
 
 statBlock : Int -> Creature -> Html Msg
 statBlock id creature =
-    div []
+    div
+        [ class
+            (if creature.incapacitated then
+                "opacity-50"
+
+             else
+                ""
+            )
+        ]
         [ div [ class "flex flex-col gap-2 w-[300px]" ]
-            [ nameRow creature { onDelete = DeleteCreature id, onUpdate = \name -> UpdateCreature id { creature | name = name } }
+            [ nameRow creature { onDelete = DeleteCreature id, onUpdate = UpdateCreature id }
             , creatureDetails creature { onUpdate = UpdateCreature id }
             , div [ class "flex flex-row justify-between text-gray-500 text-xs h-[16px]" ]
                 [ div [ class "w-[100px]" ] []
@@ -231,16 +241,17 @@ statRow label stat { onUpdate } =
         ]
 
 
-nameRow : Creature -> { onDelete : Msg, onUpdate : String -> Msg } -> Html Msg
-nameRow { name } { onDelete, onUpdate } =
+nameRow : Creature -> { onDelete : Msg, onUpdate : Creature -> Msg } -> Html Msg
+nameRow ({ name } as creature) { onDelete, onUpdate } =
     div [ class "flex gap-2" ]
         [ div [ class "font-medieval flex flex-grow flex-row justify-between h-[30px] rounded-lg overflow-hidden font-bold text-xl border border-black" ]
-            [ div [ class "bg-gray-300 flex items-center w-[100px] pl-6" ] [ text "Name" ]
-            , div [ class "font-gochi flex-1 flex items-center m-2" ] [ input [ value name, onInput onUpdate, class "w-[100%]" ] [] ]
+            [ div [ class "bg-gray-300 flex items-center px-3" ] [ text "Name" ]
+            , div [ class "font-gochi flex-1 flex items-center m-2" ] [ input [ value name, onInput (\newName -> onUpdate { creature | name = newName }), class "w-[100%]" ] [] ]
             ]
-
-        -- button to delete this creature
-        , button [ class "flex flex-shrink items-center justify-center w-[30px] h-[30px] bg-gray-300 hover:bg-gray-200 rounded-lg border border-black", onClick onDelete ] [ text "X" ]
+        , div [ class "flex flex-shrink gap-2" ]
+            [ button [ class "items-center justify-center w-[30px] h-[30px] bg-red-300 hover:bg-red-200 rounded-lg border border-black", onClick (onUpdate { creature | incapacitated = not creature.incapacitated }) ] [ text "☠️" ]
+            , button [ class "items-center justify-center w-[30px] h-[30px] bg-gray-300 hover:bg-gray-200 rounded-lg border border-black", onClick onDelete ] [ text "X" ]
+            ]
         ]
 
 
@@ -282,6 +293,7 @@ creatureTemplates =
             , criticalDamage = Nothing
             , warbandScale = True
             , notes = ""
+            , incapacitated = False
             }
           )
         , ( "Centipede"
@@ -295,6 +307,7 @@ creatureTemplates =
             , criticalDamage = Just "Venom takes effect, d12 damage to STR"
             , warbandScale = False
             , notes = ""
+            , incapacitated = False
             }
           )
         , ( "Crow"
@@ -308,6 +321,7 @@ creatureTemplates =
             , criticalDamage = Nothing
             , warbandScale = False
             , notes = "Flies 3x normal speed, knows two songs"
+            , incapacitated = False
             }
           )
         , ( "Faerie"
@@ -321,6 +335,7 @@ creatureTemplates =
             , criticalDamage = Nothing
             , warbandScale = False
             , notes = "Knows one spell"
+            , incapacitated = False
             }
           )
         , ( "Frog"
@@ -334,6 +349,7 @@ creatureTemplates =
             , criticalDamage = Just "Leap out of reach"
             , warbandScale = False
             , notes = "Always goes first unless surprised, leaps 2x normal speed"
+            , incapacitated = False
             }
           )
         , ( "Ghost"
@@ -347,6 +363,7 @@ creatureTemplates =
             , criticalDamage = Just "Possess the creature"
             , warbandScale = False
             , notes = "Only harmed by silver or magic weapons"
+            , incapacitated = False
             }
           )
         , ( "Mouse"
@@ -360,6 +377,7 @@ creatureTemplates =
             , criticalDamage = Nothing
             , warbandScale = False
             , notes = ""
+            , incapacitated = False
             }
           )
         , ( "Owl"
@@ -373,6 +391,7 @@ creatureTemplates =
             , criticalDamage = Nothing
             , warbandScale = False
             , notes = "Flies 3x normal speed. Knows two spells"
+            , incapacitated = False
             }
           )
         , ( "Rat"
@@ -386,6 +405,7 @@ creatureTemplates =
             , criticalDamage = Nothing
             , warbandScale = False
             , notes = ""
+            , incapacitated = False
             }
           )
         , ( "Snake"
@@ -399,6 +419,7 @@ creatureTemplates =
             , criticalDamage = Just "Swallow whole, d4 STR damage per round until rescued or escape"
             , warbandScale = False
             , notes = ""
+            , incapacitated = False
             }
           )
         , ( "Spider"
@@ -412,6 +433,7 @@ creatureTemplates =
             , criticalDamage = Just "Carry away in web"
             , warbandScale = False
             , notes = ""
+            , incapacitated = False
             }
           )
         ]
