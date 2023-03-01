@@ -1,31 +1,50 @@
 module Main exposing (main)
 
-import Browser
-import HelloWorld exposing (helloWorld)
-import Html exposing (Html, div, img)
-import Html.Attributes exposing (src, style)
-import Msg exposing (Msg(..))
-import VitePluginHelper
+import Browser exposing (Document)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
+import Pages.About as About
+import Pages.Creatures as Creatures
+import Route
+import Shared exposing (Shared)
+import Spa
+import View exposing (View)
 
 
-main : Program () Int Msg
-main =
-    Browser.sandbox { init = 0, update = update, view = view }
+mappers : ( (a -> b) -> View a -> View b, (c -> d) -> View c -> View d )
+mappers =
+    ( View.map, View.map )
 
 
-update : Msg -> number -> number
-update msg model =
-    case msg of
-        Increment ->
-            model + 1
-
-        Decrement ->
-            model - 1
-
-
-view : Int -> Html Msg
-view model =
-    div []
-        [ img [ src <| VitePluginHelper.asset "/src/assets/logo.png", style "width" "300px" ] []
-        , helloWorld model
+toDocument :
+    Shared
+    -> View (Spa.Msg Shared.Msg pageMsg)
+    -> Document (Spa.Msg Shared.Msg pageMsg)
+toDocument _ view =
+    { title = view.title
+    , body =
+        [ div
+            []
+            [ main_ [ class "bg-white m-8 p-3" ] [ view.body ]
+            ]
         ]
+    }
+
+
+main =
+    Spa.init
+        { defaultView = View.defaultView
+        , extractIdentity = Shared.identity
+        }
+        |> Spa.addPublicPage mappers Route.matchHome Creatures.page
+        |> Spa.addPublicPage mappers Route.matchAbout About.page
+        |> Spa.application View.map
+            { init = Shared.init
+            , subscriptions = Shared.subscriptions
+            , update = Shared.update
+            , toRoute = Route.toRoute
+            , toDocument = toDocument
+            , protectPage = Route.toUrl >> Just >> Route.SignIn >> Route.toUrl
+            }
+        |> Browser.application
